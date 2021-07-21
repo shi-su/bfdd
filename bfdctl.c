@@ -284,6 +284,18 @@ int bcm_recv(struct bfd_control_msg *bcm, void *arg)
 		} else {
 			jsonstr = json_object_to_json_string_ext(jo, JSON_C_TO_STRING_PRETTY);
 			printf("Notification:\n%s\n", jsonstr);
+			const char *op = json_object_get_string(json_object_object_get(jo, "op"));
+			if (strcmp(op, "status") == 0){
+				const char *addr = json_object_get_string(json_object_object_get(jo, "peer-address"));
+				const char *stat = json_object_get_string(json_object_object_get(jo, "state"));
+				// printf("Peer %s, state %s\n", addr, stat);
+				char output[100];
+				sprintf(output, "sonic-db-cli STATE_DB hset \"PEER_STATE|%s\" \"status\" \"%s\"\n", addr, stat);
+				int res = system(output);
+				if (res)
+					printf("%s failed", output);
+			}
+			
 			json_object_put(jo);
 		}
 		break;
